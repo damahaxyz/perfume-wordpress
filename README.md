@@ -4,7 +4,7 @@
 
 - Nginx 對外提供 HTTP
 - WordPress 使用 PHP-FPM
-- MariaDB 只存在於 Docker 內部網路，不公開資料庫連接埠
+- MariaDB 對主機僅綁定 `127.0.0.1`，不公開資料庫連接埠
 - WordPress 檔案與資料庫分別保存在 Docker named volumes
 
 ## 啟動
@@ -61,34 +61,127 @@ docker compose up -d
 
 > 請勿執行 `docker compose down -v`，這會刪除 WordPress 與資料庫 volumes。
 
+## 使用 DBeaver + SSH Tunnel
+
+MariaDB 在伺服器上僅監聽：
+
+```text
+127.0.0.1:3306
+```
+
+請勿把它改成 `0.0.0.0:3306`，也不需要在防火牆開放 3306。
+
+在 DBeaver 建立 MariaDB 連線：
+
+```text
+Main
+  Host: 127.0.0.1
+  Port: 3306
+  Database: wordpress
+  Username: wordpress
+  Password: .env 中的 MARIADB_PASSWORD
+
+SSH
+  Host/IP: VPS 的 IP 或網域
+  Port: 22
+  User name: VPS 的 Linux 使用者
+  Authentication: Public Key 或 SSH Agent
+```
+
+如果伺服器的 3306 已被其他服務占用，可修改 `.env`：
+
+```dotenv
+MARIADB_HOST_PORT=3307
+```
+
+此時 DBeaver 的資料庫 Port 也要改成 `3307`。
+
 ## 備份
 
-建立資料庫備份：
+備份必須同時包含：
+
+1. MariaDB 資料庫
+2. `wp-content` 中的上傳檔案、外掛與佈景主題
+3. Compose、Nginx、PHP 設定與備份腳本（可提交 Git）
+4. `.env`（只保存在密碼管理器或加密備份中）
+
+執行完整備份：
 
 ```bash
-mkdir -p backups
-docker compose exec -T db mariadb-dump \
-  -u root \
-  -p"$MARIADB_ROOT_PASSWORD" \
-  --single-transaction \
-  --routines \
-  --triggers \
-  "$MARIADB_DATABASE" | gzip > "backups/wordpress-$(date +%F-%H%M%S).sql.gz"
+./scripts/backup.sh
 ```
 
-上面的命令會從目前 shell 讀取環境變數。可先執行：
+腳本會在 `backups/` 產生：
 
-```bash
-set -a
-source .env
-set +a
+```text
+database-時間.sql.gz
+wp-content-時間.tar.gz
+checksums-時間.sha256
 ```
 
-WordPress 檔案也必須另外備份，尤其是 `/var/www/html/wp-content`。可用以下命令輸出 named volume：
+備份先寫入暫存檔，完成壓縮檔驗證後才會改成正式檔名。
+
+### 排程
+
+例如每天凌晨 03:15 備份：
+
+```cron
+15 3 * * * cd /opt/perfume-wordpress && ./scripts/backup.sh >> /var/log/wordpress-backup.log 2>&1
+```
+
+請把 `/opt/perfume-wordpress` 換成伺服器上的實際專案路徑。
+
+### 異地備份
+
+本機 `backups/` 只能防止操作失誤，無法防止整台 VPS 損壞或遭入侵。建議使用 restic 將它加密備份到 S3 相容物件儲存、Backblaze B2 或另一台伺服器。
+
+建議保留策略：
+
+```text
+每日備份保留 7 份
+每週備份保留 4 份
+每月備份保留 6 份
+```
+
+至少每月實際測試一次還原，不要只確認備份檔案存在。
+
+### 還原資料庫
+
+還原會改寫資料，執行前先建立一份當下備份：
 
 ```bash
-docker compose exec -T wordpress tar -C /var/www/html -czf - wp-content \
-  > "backups/wp-content-$(date +%F-%H%M%S).tar.gz"
+gzip -dc backups/database-時間.sql.gz | \
+  docker compose exec -T db sh -ec \
+  'exec mariadb --user=root --password="$MARIADB_ROOT_PASSWORD"'
+```
+
+還原 `wp-content`：
+
+```bash
+docker compose exec -T wordpress \
+  tar -C /var/www/html -xzf - < backups/wp-content-時間.tar.gz
+```
+
+### GitHub
+
+可以提交 GitHub：
+
+- `compose.yaml`
+- `nginx/`、`php/`
+- `scripts/`
+- 自行開發的佈景主題或外掛原始碼
+
+不要提交 GitHub，即使是 private repository：
+
+- `.env`、密碼、SSH Key
+- 資料庫 `.sql` 或 `.sql.gz`
+- `wp-content/uploads`
+- 完整備份壓縮檔
+
+Git 會永久累積每一版大型備份，而且資料庫可能包含使用者信箱、密碼雜湊、工作階段、訂單或其他個人資料。`.gitignore` 已排除這些檔案，但提交前仍應檢查：
+
+```bash
+git status
 ```
 
 ## HTTPS

@@ -14,8 +14,12 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - db_data:/var/lib/mysql
+    ports:
+      # 僅供伺服器本機及 SSH Tunnel 使用，不公開到外網。
+      - "127.0.0.1:${MARIADB_HOST_PORT:-3306}:3306"
     networks:
       - backend
+      - management
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -80,3 +84,4 @@ networks:
   frontend:
   backend:
     internal: true
+  management:
