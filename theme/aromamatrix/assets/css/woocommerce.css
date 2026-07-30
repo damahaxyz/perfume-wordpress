@@ -1,0 +1,27 @@
+.woocommerce .products,
+.woocommerce-page .products {
+  margin-top: 2rem;
+}
+
+.woocommerce ul.products li.product,
+.woocommerce-page ul.products li.product,
+.woocommerce div.product {
+  padding: 1.25rem;
+  background: var(--aroma-color-surface);
+  border-radius: var(--aroma-radius);
+}
+
+.woocommerce a.button,
+.woocommerce button.button,
+.woocommerce input.button {
+  color: #ffffff;
+  background: var(--aroma-color-accent);
+  border-radius: var(--aroma-radius);
+}
+
+.woocommerce a.button:hover,
+.woocommerce button.button:hover,
+.woocommerce input.button:hover {
+  color: #ffffff;
+  background: var(--aroma-color-ink);
+}

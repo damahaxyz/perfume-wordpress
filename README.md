@@ -6,6 +6,28 @@
 - WordPress 使用 PHP-FPM
 - MariaDB 對主機僅綁定 `127.0.0.1`，不公開資料庫連接埠
 - WordPress 檔案與資料庫分別保存在 Docker named volumes
+- 自研 AROMAMATRIX 主題與外掛以 Git 管理並掛載進容器
+
+## 自研主題與外掛
+
+```text
+theme/aromamatrix/
+plugin/aromamatrix-plugin/
+```
+
+本地初始化與一鍵部署方式請見：
+
+```text
+DEVELOPMENT.md
+```
+
+常用發布命令：
+
+```bash
+./scripts/deploy-theme.sh
+./scripts/deploy-plugin.sh
+./scripts/deploy-all.sh
+```
 
 ## 啟動
 

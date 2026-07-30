@@ -75,6 +75,8 @@ services:
         define('WP_REDIS_READ_TIMEOUT', 1);
     volumes:
       - wordpress_data:/var/www/html
+      - ./theme/aromamatrix:/var/www/html/wp-content/themes/aromamatrix
+      - ./plugin/aromamatrix-plugin:/var/www/html/wp-content/plugins/aromamatrix-plugin
       - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     networks:
       - frontend
@@ -98,6 +100,9 @@ services:
       - "${HTTP_BIND_IP:-0.0.0.0}:${HTTP_PORT:-8080}:80"
     volumes:
       - wordpress_data:/var/www/html:ro
+      # Nginx 也需要读取主题与插件的 CSS、JS、图片等静态资源。
+      - ./theme/aromamatrix:/var/www/html/wp-content/themes/aromamatrix:ro
+      - ./plugin/aromamatrix-plugin:/var/www/html/wp-content/plugins/aromamatrix-plugin:ro
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - frontend

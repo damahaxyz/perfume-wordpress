@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "color": {
+      "palette": [
+        {
+          "color": "#191713",
+          "name": "Ink",
+          "slug": "ink"
+        },
+        {
+          "color": "#f7f4ee",
+          "name": "Paper",
+          "slug": "paper"
+        },
+        {
+          "color": "#ffffff",
+          "name": "Surface",
+          "slug": "surface"
+        },
+        {
+          "color": "#7a5c3e",
+          "name": "Accent",
+          "slug": "accent"
+        }
+      ]
+    },
+    "layout": {
+      "contentSize": "760px",
+      "wideSize": "1200px"
+    },
+    "spacing": {
+      "units": [
+        "px",
+        "rem",
+        "%",
+        "vw",
+        "vh"
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#f7f4ee",
+      "text": "#191713"
+    },
+    "typography": {
+      "lineHeight": "1.6"
+    }
+  }
+}
