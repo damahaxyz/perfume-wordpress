@@ -27,6 +27,29 @@ services:
       retries: 10
       start_period: 30s
 
+  redis:
+    image: ${REDIS_IMAGE:-redis:7.4-alpine}
+    restart: unless-stopped
+    command:
+      - redis-server
+      # Object Cache 可安全重建；关闭持久化可以减少 VPS 磁盘 I/O。
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-256mb}
+      - --maxmemory-policy
+      - allkeys-lru
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
   wordpress:
     image: ${WORDPRESS_IMAGE:-wordpress:7.0-php8.3-fpm}
     restart: unless-stopped
@@ -36,10 +59,20 @@ services:
       WORDPRESS_DB_USER: ${MARIADB_USER}
       WORDPRESS_DB_PASSWORD: ${MARIADB_PASSWORD}
       WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
+      WORDPRESS_REDIS_HOST: redis
+      WORDPRESS_REDIS_PORT: 6379
+      WORDPRESS_REDIS_DATABASE: ${WORDPRESS_REDIS_DATABASE:-0}
+      WORDPRESS_REDIS_PREFIX: "${COMPOSE_PROJECT_NAME:-wordpress}:"
       WORDPRESS_CONFIG_EXTRA: |
         define('DISALLOW_FILE_EDIT', true);
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '512M');
+        define('WP_REDIS_HOST', getenv('WORDPRESS_REDIS_HOST') ?: 'redis');
+        define('WP_REDIS_PORT', (int) (getenv('WORDPRESS_REDIS_PORT') ?: 6379));
+        define('WP_REDIS_DATABASE', (int) (getenv('WORDPRESS_REDIS_DATABASE') ?: 0));
+        define('WP_REDIS_PREFIX', getenv('WORDPRESS_REDIS_PREFIX') ?: 'wordpress:');
+        define('WP_REDIS_TIMEOUT', 1);
+        define('WP_REDIS_READ_TIMEOUT', 1);
     volumes:
       - wordpress_data:/var/www/html
       - ./php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
@@ -48,6 +81,8 @@ services:
       - backend
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "php-fpm", "-t"]

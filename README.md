@@ -186,19 +186,27 @@ git status
 
 ## HTTPS
 
-目前 Nginx 只監聽 HTTP。正式上線時，請在它前方配置負責 TLS 的反向代理或負載平衡器，並把：
+正式網站使用：
 
-```dotenv
-HTTP_BIND_IP=127.0.0.1
+```text
+https://shop.aromamatrix.com
 ```
 
-反向代理需要傳遞至少以下標頭：
+主機 Nginx 配置來源：
 
-```nginx
-proxy_set_header Host $host;
-proxy_set_header X-Real-IP $remote_addr;
-proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_set_header X-Forwarded-Proto $scheme;
+```text
+nginx/host/shop.aromamatrix.com.conf
 ```
 
-不要在尚未設定 HTTPS、防火牆及備份以前直接對外正式營運。
+伺服器上的配置與憑證位置：
+
+```text
+/etc/nginx/sites-available/shop.aromamatrix.com
+/etc/nginx/sites-enabled/shop.aromamatrix.com
+/etc/nginx/ssl/shop.aromamatrix.com.pem
+/etc/nginx/ssl/shop.aromamatrix.com.key
+```
+
+Cloudflare SSL/TLS 模式應使用 `Full (strict)`。Origin Certificate 與私鑰只保存在本機 `cert/` 和伺服器 `/etc/nginx/ssl/`，整個 `cert/` 已被 Git 忽略。
+
+WordPress 容器仍只監聽 `127.0.0.1:8080`，由主機 Nginx 負責 HTTPS 與反向代理。

@@ -1,4 +1,5 @@
 .env
+cert/
 *.sql
 *.sql.gz
 *.tar.gz
