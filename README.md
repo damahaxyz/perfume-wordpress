@@ -6,7 +6,14 @@
 
 ```text
 wordpress-sites/
-└── aromamatrix-shop/
+├── aromamatrix-shop/
+│   ├── compose.yaml
+│   ├── theme/
+│   ├── plugin/
+│   ├── nginx/
+│   ├── php/
+│   └── scripts/
+└── 13799-shop/
     ├── compose.yaml
     ├── theme/
     ├── plugin/
@@ -18,6 +25,9 @@ wordpress-sites/
 `aromamatrix-shop` 是 `shop.aromamatrix.com` 的独立 WordPress、MariaDB 与
 Redis 部署。新增站点时应使用新的子目录、Compose 项目名、宿主机端口、
 数据库凭据、数据卷与备份目录。
+
+`13799-shop` 是第二个独立 WordPress 商店。默认仅在宿主机本地监听
+`127.0.0.1:8081`，MariaDB 通过 `127.0.0.1:3307` 供 SSH Tunnel 使用。
 
 ## AROMAMATRIX Shop
 
@@ -37,3 +47,15 @@ cd aromamatrix-shop
 详细说明见 [aromamatrix-shop/README.md](aromamatrix-shop/README.md)、
 [aromamatrix-shop/DEVELOPMENT.md](aromamatrix-shop/DEVELOPMENT.md) 和
 [aromamatrix-shop/DEPLOYMENT.md](aromamatrix-shop/DEPLOYMENT.md)。
+
+## 13799 Shop
+
+```bash
+cd 13799-shop
+cp .env.example .env
+# 替换 .env 中的两个数据库密码
+docker compose config --quiet
+docker compose up -d --wait
+```
+
+详细说明见 [13799-shop/README.md](13799-shop/README.md)。
