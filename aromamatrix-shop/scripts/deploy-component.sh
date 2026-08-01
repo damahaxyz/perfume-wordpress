@@ -7,7 +7,7 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd -- "${script_dir}/.." && pwd)"
 
 deploy_host="${DEPLOY_HOST:-root@site}"
-deploy_path="${DEPLOY_PATH:-/root/perfume-wordpress}"
+deploy_path="${DEPLOY_PATH:-/root/wordpress-sites/aromamatrix-shop}"
 deploy_url="${DEPLOY_URL:-https://shop.aromamatrix.com/}"
 timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
 

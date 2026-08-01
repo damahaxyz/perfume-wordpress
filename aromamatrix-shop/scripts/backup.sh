@@ -48,9 +48,15 @@ mv -- "${database_tmp}" "${database_file}"
 mv -- "${content_tmp}" "${content_file}"
 
 if command -v sha256sum > /dev/null 2>&1; then
-  sha256sum "${database_file}" "${content_file}" > "${checksum_file}"
+  (
+    cd -- "${backup_dir}"
+    sha256sum "$(basename -- "${database_file}")" "$(basename -- "${content_file}")"
+  ) > "${checksum_file}"
 else
-  shasum -a 256 "${database_file}" "${content_file}" > "${checksum_file}"
+  (
+    cd -- "${backup_dir}"
+    shasum -a 256 "$(basename -- "${database_file}")" "$(basename -- "${content_file}")"
+  ) > "${checksum_file}"
 fi
 
 echo "Backup completed:"

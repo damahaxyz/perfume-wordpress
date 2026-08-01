@@ -62,7 +62,7 @@ docker compose ps
 
 ## 一键部署
 
-默认服务器为 `root@site`，项目目录为 `/root/perfume-wordpress`。
+默认服务器为 `root@site`，项目目录为 `/root/wordpress-sites/aromamatrix-shop`。
 
 只部署主题：
 
@@ -86,7 +86,7 @@ docker compose ps
 
 ```bash
 DEPLOY_HOST=root@example \
-DEPLOY_PATH=/opt/perfume-wordpress \
+DEPLOY_PATH=/opt/wordpress-sites/aromamatrix-shop \
 DEPLOY_URL=https://example.com/ \
 ./scripts/deploy-all.sh
 ```
@@ -114,10 +114,10 @@ DEPLOY_URL='' ./scripts/deploy-all.sh
 `DEPLOYMENT.md` 的 Compose 更新流程上传和校验：
 
 ```bash
-scp compose.yaml root@site:/root/perfume-wordpress/compose.yaml.new
+scp compose.yaml root@site:/root/wordpress-sites/aromamatrix-shop/compose.yaml.new
 
 ssh root@site
-cd /root/perfume-wordpress
+cd /root/wordpress-sites/aromamatrix-shop
 docker compose -f compose.yaml.new config --quiet
 mv compose.yaml.new compose.yaml
 mkdir -p theme/aromamatrix plugin/aromamatrix-plugin
