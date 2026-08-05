@@ -45,8 +45,8 @@ Compose 会将自定义代码挂载进容器，修改 PHP、CSS 或 JavaScript �
 
 ## 一键部署
 
-脚本默认部署到 `root@site:/root/wordpress-sites/13799-shop`。新域名确定前，
-HTTP 检查默认关闭。
+脚本默认部署到 `root@site:/root/wordpress-sites/13799-shop`，并检查
+`https://www.13799.com/`。
 
 ```bash
 ./scripts/deploy-theme.sh

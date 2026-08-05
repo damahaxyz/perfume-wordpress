@@ -8,7 +8,7 @@ project_dir="$(cd -- "${script_dir}/.." && pwd)"
 
 deploy_host="${DEPLOY_HOST:-root@site}"
 deploy_path="${DEPLOY_PATH:-/root/wordpress-sites/13799-shop}"
-deploy_url="${DEPLOY_URL:-}"
+deploy_url="${DEPLOY_URL:-https://www.13799.com/}"
 timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
 
 if (($# == 0)); then

@@ -70,14 +70,16 @@ curl -I http://127.0.0.1:8081/
 
 ## 域名与 HTTPS
 
-这个目录暂时不包含主机 Nginx 站点文件和 TLS 证书，因为域名尚未
-指定。确定域名后，主机反向代理的上游应设为：
+正式域名为 `https://www.13799.com`，`https://13799.com` 会重定向到
+`www`。主机 Nginx 配置位于 `nginx/host/www.13799.com.conf`，反向代理
+上游为：
 
 ```nginx
 proxy_pass http://127.0.0.1:8081;
 ```
 
-请勿与 `aromamatrix-shop` 共用不匹配新域名的 TLS 证书。
+本地 Cloudflare Origin Certificate 位于 `cert/all.13799.com.pem` 和
+`cert/all.13799.com.key`。私钥不得提交 Git 或写入聊天内容。
 
 ## 自定义开发与部署
 

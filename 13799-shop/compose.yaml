@@ -57,14 +57,21 @@ services:
       WORDPRESS_DB_USER: ${MARIADB_USER}
       WORDPRESS_DB_PASSWORD: ${MARIADB_PASSWORD}
       WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
+      WORDPRESS_HOME: ${WORDPRESS_HOME:-https://www.13799.com}
+      WORDPRESS_SITEURL: ${WORDPRESS_SITEURL:-https://www.13799.com}
       WORDPRESS_REDIS_HOST: redis
       WORDPRESS_REDIS_PORT: 6379
       WORDPRESS_REDIS_DATABASE: ${WORDPRESS_REDIS_DATABASE:-0}
       WORDPRESS_REDIS_PREFIX: "${COMPOSE_PROJECT_NAME:-13799-shop}:"
       WORDPRESS_CONFIG_EXTRA: |
         define('DISALLOW_FILE_EDIT', true);
-        define('WP_MEMORY_LIMIT', '256M');
-        define('WP_MAX_MEMORY_LIMIT', '512M');
+        define('WP_MEMORY_LIMIT', '500M');
+        define('WP_MAX_MEMORY_LIMIT', '500M');
+        define('WP_HOME', getenv('WORDPRESS_HOME') ?: 'https://www.13799.com');
+        define('WP_SITEURL', getenv('WORDPRESS_SITEURL') ?: 'https://www.13799.com');
+        if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && strpos($$_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) {
+            $$_SERVER['HTTPS'] = 'on';
+        }
         define('WP_REDIS_HOST', getenv('WORDPRESS_REDIS_HOST') ?: 'redis');
         define('WP_REDIS_PORT', (int) (getenv('WORDPRESS_REDIS_PORT') ?: 6379));
         define('WP_REDIS_DATABASE', (int) (getenv('WORDPRESS_REDIS_DATABASE') ?: 0));
@@ -108,7 +115,9 @@ services:
       wordpress:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      # 首次安装时 WordPress 会将 HTTP 跳转到正式 HTTPS 域名，
+      # 使用 nginx -t 可避免 wget 跟随跳转后产生假阴性。
+      test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 5s
       retries: 3
