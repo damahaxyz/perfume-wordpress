@@ -110,10 +110,271 @@ add_action('wp', static function (): void {
     }
 
     remove_action('woocommerce_sidebar', 'woocommerce_get_sidebar', 10);
+    remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
+    remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
+    add_action('woocommerce_single_product_summary', 'aromamatrix_template_product_eyebrow', 4);
+    add_action('woocommerce_single_product_summary', 'aromamatrix_template_sample_purchase_panel', 29);
+    add_action('woocommerce_single_product_summary', 'aromamatrix_template_single_product_meta', 40);
+    remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_product_data_tabs', 10);
+    add_action('woocommerce_after_single_product_summary', 'aromamatrix_template_single_product_details', 10);
+});
+
+/**
+ * Resolve the presentation type for fragrance and bottle catalog products.
+ */
+function aromamatrix_get_product_kind(WC_Product $product): string
+{
+    $terms = get_the_terms($product->get_id(), 'product_cat');
+
+    if (! is_array($terms)) {
+        return 'product';
+    }
+
+    foreach ($terms as $term) {
+        if ('perfume-bottle' === $term->slug) {
+            return 'bottle';
+        }
+
+        $ancestors = get_ancestors($term->term_id, 'product_cat', 'taxonomy');
+        foreach ($ancestors as $ancestor_id) {
+            $ancestor = get_term($ancestor_id, 'product_cat');
+            if ($ancestor instanceof WP_Term && 'perfume-bottle' === $ancestor->slug) {
+                return 'bottle';
+            }
+        }
+    }
+
+    return 'fragrance';
+}
+
+/**
+ * Add a concise category cue above the product title.
+ */
+function aromamatrix_template_product_eyebrow(): void
+{
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+
+    $kind = aromamatrix_get_product_kind($product);
+    $label = 'bottle' === $kind ? __('Perfume Bottle', 'aromamatrix') : __('Fragrance Direction', 'aromamatrix');
+    ?>
+    <span class="product-kind product-kind--<?php echo esc_attr($kind); ?>"><?php echo esc_html($label); ?></span>
+    <?php
+}
+
+/**
+ * Explain the sample purchase action, or show its setup state when no price exists.
+ */
+function aromamatrix_template_sample_purchase_panel(): void
+{
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+
+    $kind = aromamatrix_get_product_kind($product);
+    $is_bottle = 'bottle' === $kind;
+    ?>
+    <div class="sample-purchase-panel<?php echo $product->is_purchasable() ? '' : ' sample-purchase-panel--pending'; ?>">
+        <span class="sample-purchase-panel__label">
+            <?php echo esc_html($is_bottle ? __('Bottle Sample', 'aromamatrix') : __('Fragrance Sample', 'aromamatrix')); ?>
+        </span>
+        <strong>
+            <?php
+            echo esc_html(
+                $product->is_purchasable()
+                    ? ($is_bottle ? __('Review the component before bulk selection.', 'aromamatrix') : __('Evaluate the scent before project development.', 'aromamatrix'))
+                    : __('Online sample ordering is being prepared.', 'aromamatrix')
+            );
+            ?>
+        </strong>
+        <p>
+            <?php
+            echo esc_html(
+                $is_bottle
+                    ? __('One empty bottle sample is supplied per cart item unless stated otherwise.', 'aromamatrix')
+                    : __('One standard fragrance evaluation sample is supplied per cart item.', 'aromamatrix')
+            );
+            ?>
+        </p>
+        <?php if (! $product->is_purchasable()) : ?>
+            <a class="sample-purchase-panel__link" href="https://www.aromamatrix.com/contact?request=samples#inquiry-form">
+                <?php esc_html_e('Request Sample Availability →', 'aromamatrix'); ?>
+            </a>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
+/**
+ * Show the public catalog SKU and buyer-useful product navigation.
+ */
+function aromamatrix_template_single_product_meta(): void
+{
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+    ?>
+    <div class="product_meta">
+        <?php do_action('woocommerce_product_meta_start'); ?>
+
+        <?php if ($product->get_sku()) : ?>
+            <span class="sku_wrapper">
+                <?php esc_html_e('SKU:', 'woocommerce'); ?>
+                <span class="sku"><?php echo esc_html($product->get_sku()); ?></span>
+            </span>
+        <?php endif; ?>
+
+        <?php
+        echo wc_get_product_category_list(
+            $product->get_id(),
+            ', ',
+            '<span class="posted_in">' . _n(
+                'Category:',
+                'Categories:',
+                count($product->get_category_ids()),
+                'woocommerce'
+            ) . ' ',
+            '</span>'
+        ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
+        echo wc_get_product_tag_list(
+            $product->get_id(),
+            ', ',
+            '<span class="tagged_as">' . _n(
+                'Tag:',
+                'Tags:',
+                count($product->get_tag_ids()),
+                'woocommerce'
+            ) . ' ',
+            '</span>'
+        ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        ?>
+
+        <?php do_action('woocommerce_product_meta_end'); ?>
+    </div>
+    <?php
+}
+
+/**
+ * Present the description and fragrance attributes as one continuous section.
+ */
+function aromamatrix_template_single_product_details(): void
+{
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+
+    $description = $product->get_description();
+    $has_attributes = $product->has_attributes();
+    $kind = aromamatrix_get_product_kind($product);
+    $details_title = 'bottle' === $kind ? __('Bottle Details', 'aromamatrix') : __('Fragrance Details', 'aromamatrix');
+    $attributes_title = 'bottle' === $kind ? __('Bottle Specifications', 'aromamatrix') : __('Fragrance Attributes', 'aromamatrix');
+
+    if (! $description && ! $has_attributes) {
+        return;
+    }
+    ?>
+    <section class="aromamatrix-product-details aromamatrix-product-details--<?php echo esc_attr($kind); ?>" aria-labelledby="aromamatrix-product-details-title">
+        <div class="aromamatrix-product-details__heading">
+            <span><?php esc_html_e('Product Evaluation', 'aromamatrix'); ?></span>
+            <h2 id="aromamatrix-product-details-title"><?php echo esc_html($details_title); ?></h2>
+        </div>
+
+        <div class="aromamatrix-product-details__grid">
+            <?php if ($description) : ?>
+                <div class="aromamatrix-product-details__description">
+                    <?php echo wp_kses_post(apply_filters('the_content', $description)); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($has_attributes) : ?>
+                <aside class="aromamatrix-product-details__attributes" aria-label="<?php echo esc_attr($attributes_title); ?>">
+                    <h3><?php echo esc_html($attributes_title); ?></h3>
+                    <?php wc_display_product_attributes($product); ?>
+                </aside>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php
+}
+
+add_filter('woocommerce_product_single_add_to_cart_text', static function (string $text): string {
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return $text;
+    }
+
+    return 'bottle' === aromamatrix_get_product_kind($product)
+        ? __('Add Bottle Sample', 'aromamatrix')
+        : __('Add Sample to Cart', 'aromamatrix');
+});
+
+add_filter('woocommerce_product_add_to_cart_text', static function (string $text, WC_Product $product): string {
+    if (! $product->is_purchasable()) {
+        return __('View Details', 'aromamatrix');
+    }
+
+    return 'bottle' === aromamatrix_get_product_kind($product)
+        ? __('Add Bottle Sample', 'aromamatrix')
+        : __('Add Sample', 'aromamatrix');
+}, 10, 2);
+
+add_filter('woocommerce_add_to_cart_fragments', static function (array $fragments): array {
+    ob_start();
+    ?>
+    <span class="header-cart__count"><?php echo esc_html((string) WC()->cart->get_cart_contents_count()); ?></span>
+    <?php
+    $fragments['.header-cart__count'] = (string) ob_get_clean();
+
+    return $fragments;
 });
 
 add_filter('loop_shop_columns', static fn (): int => 4);
 add_filter('loop_shop_per_page', static fn (): int => 12);
+
+remove_action('woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10);
+add_action('woocommerce_shop_loop_item_title', 'woocommerce_template_loop_price', 20);
+
+add_action('woocommerce_before_shop_loop_item_title', static function (): void {
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+
+    $kind = aromamatrix_get_product_kind($product);
+    $label = 'bottle' === $kind ? __('Bottle', 'aromamatrix') : __('Fragrance', 'aromamatrix');
+    ?>
+    <span class="loop-product-kind loop-product-kind--<?php echo esc_attr($kind); ?>"><?php echo esc_html($label); ?></span>
+    <?php
+}, 9);
+
+add_action('woocommerce_after_shop_loop_item_title', static function (): void {
+    global $product;
+
+    if (! $product instanceof WC_Product) {
+        return;
+    }
+
+    $sku = $product->get_sku();
+
+    if ('' === $sku) {
+        return;
+    }
+    ?>
+    <span class="loop-product-sku"><?php echo esc_html(sprintf(__('SKU: %s', 'aromamatrix'), $sku)); ?></span>
+    <?php
+}, 7);
 
 add_filter('woocommerce_output_related_products_args', static function (array $args): array {
     $args['posts_per_page'] = 4;

@@ -39,6 +39,7 @@ $shop_url = class_exists('WooCommerce') ? wc_get_page_permalink('shop') : home_u
                 <li><a href="https://www.aromamatrix.com/process#oem"><?php esc_html_e('OEM', 'aromamatrix'); ?></a></li>
                 <li><a href="https://www.aromamatrix.com/process#odm"><?php esc_html_e('ODM', 'aromamatrix'); ?></a></li>
                 <li><a href="https://www.aromamatrix.com/#packaging-solutions"><?php esc_html_e('Packaging Support', 'aromamatrix'); ?></a></li>
+                <li><a href="<?php echo esc_url(home_url('/b2b-ordering-information/')); ?>"><?php esc_html_e('B2B Ordering Information', 'aromamatrix'); ?></a></li>
             </ul>
         </div>
 

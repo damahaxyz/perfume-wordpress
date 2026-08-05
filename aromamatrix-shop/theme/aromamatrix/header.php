@@ -28,7 +28,7 @@ $cart_count = class_exists('WooCommerce') && WC()->cart ? WC()->cart->get_cart_c
         <a class="site-branding" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php esc_attr_e('AROMAMATRIX home', 'aromamatrix'); ?>">
             <img
                 class="site-branding__symbol"
-                src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/aromamatrix-logo-square.svg'); ?>"
+                src="https://www.aromamatrix.com/assets/images/brand/aromamatrix-logo-square.png"
                 width="52"
                 height="52"
                 alt=""
@@ -54,7 +54,7 @@ $cart_count = class_exists('WooCommerce') && WC()->cart ? WC()->cart->get_cart_c
             <?php if (class_exists('WooCommerce')) : ?>
                 <a class="header-cart" href="<?php echo esc_url(wc_get_cart_url()); ?>" aria-label="<?php esc_attr_e('View cart', 'aromamatrix'); ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.5 10h9.8l1.7-7H7M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
-                    <span><?php echo esc_html((string) $cart_count); ?></span>
+                    <span class="header-cart__count"><?php echo esc_html((string) $cart_count); ?></span>
                 </a>
             <?php endif; ?>
 

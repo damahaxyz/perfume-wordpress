@@ -13,7 +13,14 @@ wordpress-sites/
 │   ├── nginx/
 │   ├── php/
 │   └── scripts/
-└── 13799-shop/
+├── 13799-shop/
+│   ├── compose.yaml
+│   ├── theme/
+│   ├── plugin/
+│   ├── nginx/
+│   ├── php/
+│   └── scripts/
+└── perfumehouse-shop/
     ├── compose.yaml
     ├── theme/
     ├── plugin/
@@ -28,6 +35,10 @@ Redis 部署。新增站点时应使用新的子目录、Compose 项目名、宿
 
 `13799-shop` 是第二个独立 WordPress 商店。默认仅在宿主机本地监听
 `127.0.0.1:8081`，MariaDB 通过 `127.0.0.1:3307` 供 SSH Tunnel 使用。
+
+`perfumehouse-shop` 是第三个独立 WordPress 商店，包含专属主题与插件。
+默认监听 `127.0.0.1:8082`，MariaDB 通过 `127.0.0.1:3308` 供 SSH Tunnel
+使用；正式域名为 `https://www.perfumehouse.vip`。
 
 ## AROMAMATRIX Shop
 
@@ -59,3 +70,15 @@ docker compose up -d --wait
 ```
 
 详细说明见 [13799-shop/README.md](13799-shop/README.md)。
+
+## PerfumeHouse Shop
+
+```bash
+cd perfumehouse-shop
+cp .env.example .env
+# 替换 .env 中的两个数据库密码
+docker compose config --quiet
+docker compose up -d --wait
+```
+
+详细说明见 [perfumehouse-shop/README.md](perfumehouse-shop/README.md)。

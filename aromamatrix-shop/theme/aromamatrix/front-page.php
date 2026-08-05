@@ -173,7 +173,15 @@ $fallback_categories = [
                             </span>
                             <h3><a href="<?php echo esc_url($product->get_permalink()); ?>"><?php echo esc_html($product->get_name()); ?></a></h3>
                             <div class="aroma-product__meta">
-                                <span><?php esc_html_e('Private label available', 'aromamatrix'); ?></span>
+                                <span>
+                                    <?php
+                                    echo esc_html(
+                                        'bottle' === aromamatrix_get_product_kind($product)
+                                            ? __('Bottle sample', 'aromamatrix')
+                                            : __('Fragrance sample', 'aromamatrix')
+                                    );
+                                    ?>
+                                </span>
                                 <?php if ($product->get_price_html()) : ?>
                                     <span class="price"><?php echo wp_kses_post($product->get_price_html()); ?></span>
                                 <?php endif; ?>
